@@ -30,12 +30,13 @@ def paginateProjects(request, projects, results):
         page = paginator.num_pages
         projects = paginator.get_page(page)
 
-    leftIndex = int(page) - 4
-    if leftIndex < 1:
-        leftIndex = 1
-    rightIndex = int(page) + 5
-    if rightIndex < paginator.num_pages:
-        rightIndex = paginator.num_pages + 1
-    custom_range = (leftIndex, rightIndex)
+    # leftIndex = int(page) - 4
+    # if leftIndex < 1:
+    #     leftIndex = 1
+    # rightIndex = int(page) + 5
+    # if rightIndex < paginator.num_pages:
+    #     rightIndex = paginator.num_pages + 1
+    # custom_range = (leftIndex, rightIndex)
     
-    return custom_range, projects, paginator
+    # return custom_range, projects, paginator
+    return projects, paginator

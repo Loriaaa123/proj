@@ -7,7 +7,7 @@
         <h3 class="inbox__title">New Messages(<span>{{unreadCount}}</span>)</h3>
 
         <ul class="messages">
-            {% for message in messageRequests %}
+            {% for message in messagesAll %}
             {% if message.is_read == False %}
             <li class="message message--unread">
                 {% else %}

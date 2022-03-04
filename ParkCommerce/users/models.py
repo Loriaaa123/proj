@@ -18,7 +18,9 @@ class Profile(models.Model):
     social_linkedin = models.CharField(max_length=100, null=True, blank=True)
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     def __str__(self):
-        return self.username
+        return self.username or ''
+    class Meta:
+        ordering = ['name']
 
 class Skill(models.Model):
     owner = models.ForeignKey(Profile, on_delete=models.CASCADE, null=True, blank=True)
@@ -28,4 +30,21 @@ class Skill(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
 
     def __str__(self):
-        return self.name
+        return self.name or ''
+
+class Message(models.Model):
+    sender = models.ForeignKey(Profile, on_delete=models.CASCADE, null=True, blank=True)
+    recipient = models.ForeignKey(Profile, on_delete=models.CASCADE, null=True, blank=True, related_name='messages')
+    name = models.CharField(max_length=100, null=True, blank=True)
+    email = models.EmailField(max_length=100, null=True, blank=True)
+    subject = models.CharField(max_length=100, null=True, blank=True)
+    is_read = models.BooleanField(default=False, null=True)
+    body = models.TextField(max_length=500, blank=False)
+    created = models.DateTimeField(auto_now_add=True)
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+
+    def __str__(self):
+        return self.subject or ''
+    
+    class Meta:
+        ordering = ['is_read', '-created']

@@ -29,12 +29,13 @@ def paginateProfiles(request, profiles, results):
         page = paginator.num_pages
         profiles = paginator.get_page(page)
 
-    leftIndex = int(page) - 4
-    if leftIndex < 1:
-        leftIndex = 1
-    rightIndex = int(page) + 5
-    if rightIndex < paginator.num_pages:
-        rightIndex = paginator.num_pages + 1
-    custom_range = (leftIndex, rightIndex)
+    # leftIndex = int(page) - 4
+    # if leftIndex < 1:
+    #     leftIndex = 1
+    # rightIndex = int(page) + 5
+    # if rightIndex < paginator.num_pages:
+    #     rightIndex = paginator.num_pages + 1
+    # custom_range = (leftIndex, rightIndex)
 
-    return custom_range, profiles, paginator
+    # return custom_range, profiles, paginator
+    return profiles, paginator

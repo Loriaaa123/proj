@@ -1,30 +1,13 @@
-<!DOCTYPE html>
-<html lang="en">
-
-<head>
-    <meta charset="UTF-8" />
-    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-
-    <!-- Favicon -->
-    <link rel="shortcut icon" href="images/favicon.ico" type="image/x-icon" />
-    <!-- Icon - IconMonster -->
-    <link rel="stylesheet" href="https://cdn.iconmonstr.com/1.3.0/css/iconmonstr-iconic-font.min.css" />
-    <!-- Mumble UI -->
-    <link rel="stylesheet" href="uikit/styles/uikit.css" />
-    <!-- Dev Search UI -->
-    <link rel="stylesheet" href="styles/app.css" />
-
-    <title>DevSearch - Connect with Developers!</title>
-</head>
-
+{% extends 'main.html' %}
+{% load static%}
+{% block content %}
 <body>
 
     <div class="auth">
         <div class="card">
             <div class="auth__header text-center">
                 <a href="/">
-                    <img src="images/icon.svg" alt="icon" />
+                    <img src="{% static images/icon.svg %}" alt="icon" />
                 </a>
                 <h3>Account SignUp</h3>
                 <p>Create a new developer account</p>
@@ -69,4 +52,4 @@
     </div>
 </body>
 
-</html>
+{% endblock %}

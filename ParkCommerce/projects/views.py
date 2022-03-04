@@ -1,22 +1,37 @@
 from django.shortcuts import render, redirect
 from .models import Project, Review, Tag
-from .forms import ProjectForm
+from .forms import ProjectForm, ReviewForm
+from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from .utils import searchProjects, paginateProjects
 
 
 def projects(request):
     projects, search_query = searchProjects(request)
-    custom_range, projects, paginator = paginateProjects(request, projects, 3)
-
-    context = {"projects": projects, "search_query": search_query, 'paginator': paginator, 'custom_range': custom_range}
+    # custom_range, projects, paginator = paginateProjects(request, projects, 10)
+    projects, paginator = paginateProjects(request, projects, 10)
+    # context = {"projects": projects, "search_query": search_query, 'paginator': paginator, 'custom_range': custom_range}
+    context = {"projects": projects, "search_query": search_query, 'paginator': paginator}
     return render(request, 'projects/projects.html', context)
 
 def project(request, project_id):
     projectObj = Project.objects.get(id=project_id)
+    form = ReviewForm()
+    if request.method == 'POST':
+        form = ReviewForm(request.POST)
+        review = form.save(commit=False)
+        review.project = projectObj
+        review.owner = request.user.profile
+        review.save()
+
+        projectObj.getVoteCount()
+
+        messages.success(request, 'Review submitted successfully')
+        return redirect('project', project_id=project_id)
+    # update votecount
     tags = projectObj.tags.all()
-    context = {"project": projectObj, "tags": tags}
-    return render(request, 'projects/project.html', context)
+    context = {"project": projectObj, "tags": tags, 'form': form}
+    return render(request, 'projects/single-project.html', context)
 
 @login_required(login_url='login')
 def createProject(request):
@@ -42,7 +57,7 @@ def updateProject(request, object_id):
         if form.is_valid():
             form.save()
             return redirect('account')
-    context = {'form': form}
+    context = {'form': form, 'profile': profile, 'project': project}
     return render(request, 'projects/project_form.html', context)
 
 @login_required(login_url='login')

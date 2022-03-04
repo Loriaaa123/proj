@@ -1,27 +1,27 @@
-from multiprocessing import context
-import profile
 from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-from django.db.models import Q
-from .models import Profile, Skill
-from .forms import CustomUserCreationForm, ProfileForm, SkillForm
+from .models import Profile, Skill, Message
+from .forms import CustomUserCreationForm, ProfileForm, SkillForm, MessageForm
 from .utils import searchProfiles, paginateProfiles
 
 
 def profiles(request):
     profiles, search_query = searchProfiles(request)
-    custom_range, profiles, paginator = paginateProfiles(request, profiles, 3)
-    context = { "profiles": profiles, "search_query": search_query, "custom_range": custom_range, "paginator": paginator }
+    # custom_range, profiles, paginator = paginateProfiles(request, profiles, 10)
+    profiles, paginator = paginateProfiles(request, profiles, 10)
+
+    # context = { "profiles": profiles, "search_query": search_query, "custom_range": custom_range, "paginator": paginator }
+    context = {"profiles": profiles, "search_query": search_query, "paginator": paginator}
     return render(request, 'users/profiles.html', context)
 
 
 def userProfile(request, pk):
     profile = Profile.objects.get(id=pk)
-    top_skills = profile.skills.exclude(description__exact='')
-    other_skills = profile.skills.filter(description='')
+    top_skills = profile.skill_set.exclude(description__exact='')
+    other_skills = profile.skill_set.filter(description='')
     context = { "profile": profile , "topSkills": top_skills, "otherSkills": other_skills }
     return render(request, 'users/user-profile.html', context)
 
@@ -32,7 +32,7 @@ def loginUser(request):
         return redirect('profiles')
 
     if request.method == 'POST':
-        username = request.POST['username']
+        username = request.POST['username'].lower()
         password = request.POST['password']
         
         try:
@@ -43,12 +43,12 @@ def loginUser(request):
         user = authenticate(request, username=username, password=password)
         if user is not None:
             login(request, user)
-            return redirect('profiles')
+            return redirect(request.GET['next'] if 'next' in request.GET else 'account')
         else:
             messages.error(request, 'Invalid username or password')
             return redirect('login')
-
-    return render(request, 'users/login.html')
+    context = { "page": page }
+    return render(request, 'users/login_register.html', context)
 
 def logoutUser(request):
     logout(request)
@@ -73,10 +73,7 @@ def registerUser(request):
     context = { "page": page , "form": form }
     return render(request, 'users/login_register.html', context)
 
-def inbox(request):
-    return render(request, 'users/inbox.html')
-
-@login_required
+@login_required(login_url='login')
 def userAccount(request):
     profile = request.user.profile 
 
@@ -86,7 +83,7 @@ def userAccount(request):
     context = {'profile': profile, 'skills': skills, 'projects': projects}
     return render(request, 'users/account.html', context)
 
-@login_required
+@login_required(login_url='login')
 def editAccount(request):
     profile = request.user.profile
     form = ProfileForm()
@@ -99,10 +96,10 @@ def editAccount(request):
         else:
             messages.error(request, 'Invalid form')
             return redirect('edit-account')
-    context = {}
+    context = {'profile': profile, 'form': form}
     return render(request, 'users/profile_form.html', context)
 
-@login_required
+@login_required(login_url='login')
 def createSkill(request):
     profile =  request.user.profile
     form = SkillForm()
@@ -120,7 +117,7 @@ def createSkill(request):
     context = {'form': form}
     return render(request, 'users/skill_form.html', context)
 
-@login_required
+@login_required(login_url='login')
 def updateSkill(request, pk):
     profile = request.user.profile
     skill = profile.skill_set.get(id=pk)
@@ -137,7 +134,8 @@ def updateSkill(request, pk):
     context = {'form': form}
     return render(request, 'users/skill_form.html', context)
 
-@login_required
+
+@login_required(login_url='login')
 def deleteSkill(request, pk):
     profile = request.user.profile
     skill = profile.skill_set.get(id=pk)
@@ -147,3 +145,46 @@ def deleteSkill(request, pk):
         return redirect('account')
     context = {'skill': skill}
     return render(request, 'users/delete_skill.html', context)
+
+@login_required(login_url='login')
+def inbox(request):
+    profile = request.user.profile
+    messagesAll = profile.messages.all()
+    unreadCound = messagesAll.filter(is_read=False).count()
+    context = {'messagesAll': messagesAll, 'unreadCound': unreadCound}
+    return render(request, 'users/inbox.html', context)
+
+@login_required(login_url='login')
+def viewMessage(request, pk):
+    profile = request.user.profile
+    message = profile.messages.get(id=pk)
+    if message.is_read == False:
+        message.is_read = True
+        message.save()
+    context = {'message': message}
+    return render(request, 'users/message.html', context)
+
+@login_required(login_url='login')
+def createMessage(request, pk):
+    form = MessageForm()
+    recipient = Profile.objects.get(id=pk)
+    try:
+        sender = request.user.profile
+    except:
+        sender = None
+
+    if request.method == 'POST':
+        form = MessageForm(request.POST)
+        if form.is_valid():
+            message = form.save(commit=False)
+            message.sender = sender
+            message.recipient = recipient
+
+            if sender:
+                message.name = sender.name
+                message.email = sender.email
+            message.save()
+            messages.success(request, 'Your message has been sent')
+            return redirect('user-profile', pk=pk)
+    context = {'recipient': recipient, "form": form}
+    return render(request, 'users/message_form.html', context)

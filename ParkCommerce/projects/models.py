@@ -15,12 +15,17 @@ class Project(models.Model):
     created = models.DateTimeField(auto_now_add=True)
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False, unique=True)
     def __str__(self):
-        return self.title
+        return self.title or ''
     class Meta:
-        ordering = ['-created']
+        ordering = ['vote_ratio', '-vote_total', 'title']
+
+    @property
+    def reviewers(self):
+        queryset = self.review_set.all().values_list('owner__id', flat=True)
+        return queryset
 
 class Review(models.Model):
-    # owner
+    owner = models.ForeignKey(Profile, on_delete=models.CASCADE, null=True, blank=True)
     project = models.ForeignKey("Project", on_delete=models.CASCADE) 
     VOTE_TYPE = {
         ('UP', 'UPVOTE'),
@@ -30,8 +35,21 @@ class Review(models.Model):
     value = models.CharField(max_length=200, choices=VOTE_TYPE)
     created = models.DateTimeField(auto_now_add=True)
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False, unique=True)
+    class Meta:
+        unique_together = [['owner', 'project']]
     def __str__(self):
-        return self.value
+        return self.value or ''
+    
+    @property
+    def getVoteCount(self):
+        reviews = self.review_set.all()
+        upVotes = reviews.filter(value='UP').count()
+        totalVotes = reviews.count()
+        ratio = (upVotes / totalVotes) * 100
+        self.vote_total = totalVotes
+        self.vote_ratio = ratio
+        self.save()
+    
 
 class Tag(models.Model):
     name = models.CharField(max_length=200)
