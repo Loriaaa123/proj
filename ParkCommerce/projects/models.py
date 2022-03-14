@@ -17,12 +17,22 @@ class Project(models.Model):
     def __str__(self):
         return self.title or ''
     class Meta:
-        ordering = ['vote_ratio', '-vote_total', 'title']
+        ordering = ['-vote_ratio', 'vote_total', 'title']
 
     @property
     def reviewers(self):
         queryset = self.review_set.all().values_list('owner__id', flat=True)
         return queryset
+ 
+    @property
+    def getVoteCount(self):
+        reviews = self.review_set.all()
+        upVotes = reviews.filter(value='UP').count()
+        totalVotes = reviews.count()
+        ratio = (upVotes / totalVotes) * 100
+        self.vote_total = totalVotes
+        self.vote_ratio = '{:.2f}'.format(ratio)
+        self.save()
 
 class Review(models.Model):
     owner = models.ForeignKey(Profile, on_delete=models.CASCADE, null=True, blank=True)
@@ -39,16 +49,6 @@ class Review(models.Model):
         unique_together = [['owner', 'project']]
     def __str__(self):
         return self.value or ''
-    
-    @property
-    def getVoteCount(self):
-        reviews = self.review_set.all()
-        upVotes = reviews.filter(value='UP').count()
-        totalVotes = reviews.count()
-        ratio = (upVotes / totalVotes) * 100
-        self.vote_total = totalVotes
-        self.vote_ratio = ratio
-        self.save()
     
 
 class Tag(models.Model):

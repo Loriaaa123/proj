@@ -10,11 +10,9 @@ from .utils import searchProfiles, paginateProfiles
 
 def profiles(request):
     profiles, search_query = searchProfiles(request)
-    # custom_range, profiles, paginator = paginateProfiles(request, profiles, 10)
-    profiles, paginator = paginateProfiles(request, profiles, 10)
+    custom_range, profiles = paginateProfiles(request, profiles, 2)
 
-    # context = { "profiles": profiles, "search_query": search_query, "custom_range": custom_range, "paginator": paginator }
-    context = {"profiles": profiles, "search_query": search_query, "paginator": paginator}
+    context = { "profiles": profiles, "search_query": search_query, "custom_range": custom_range}
     return render(request, 'users/profiles.html', context)
 
 
@@ -86,7 +84,7 @@ def userAccount(request):
 @login_required(login_url='login')
 def editAccount(request):
     profile = request.user.profile
-    form = ProfileForm()
+    form = ProfileForm(instance=profile)
     if request.method == 'POST':
         form = ProfileForm(request.POST, request.FILES, instance=profile)
         if form.is_valid():

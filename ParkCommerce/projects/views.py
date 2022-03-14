@@ -8,10 +8,8 @@ from .utils import searchProjects, paginateProjects
 
 def projects(request):
     projects, search_query = searchProjects(request)
-    # custom_range, projects, paginator = paginateProjects(request, projects, 10)
-    projects, paginator = paginateProjects(request, projects, 10)
-    # context = {"projects": projects, "search_query": search_query, 'paginator': paginator, 'custom_range': custom_range}
-    context = {"projects": projects, "search_query": search_query, 'paginator': paginator}
+    custom_range, projects = paginateProjects(request, projects, 2)
+    context = {"projects": projects, "search_query": search_query, 'custom_range': custom_range}
     return render(request, 'projects/projects.html', context)
 
 def project(request, project_id):
@@ -24,7 +22,7 @@ def project(request, project_id):
         review.owner = request.user.profile
         review.save()
 
-        projectObj.getVoteCount()
+        projectObj.getVoteCount
 
         messages.success(request, 'Review submitted successfully')
         return redirect('project', project_id=project_id)
@@ -51,7 +49,7 @@ def createProject(request):
 def updateProject(request, object_id):
     profile = request.user.profile
     project = profile.project_set.get(id=object_id)
-    form = ProjectForm()
+    form = ProjectForm(instance=project)
     if request.method == 'POST':
         form = ProjectForm(request.POST, request.FILES, instance=project)
         if form.is_valid():

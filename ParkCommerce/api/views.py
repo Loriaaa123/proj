@@ -1,8 +1,8 @@
-from django.http import JsonResponse
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework.response import Response
 from .serializers import ProjectSerializer
-from projects.models import Project
+from projects.models import Project, Review
 
 @api_view(['GET'])
 def getRoutes(request):
@@ -27,3 +27,14 @@ def getProject(request, pk):
     project = Project.objects.get(id=pk)
     serializer = ProjectSerializer(project, many=False)
     return Response(serializer.data)
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def projectVote(request, pk):
+    project = Project.objects.get(id=pk)
+    user = request.user
+    review, created = Review.objects.get_or_create(owner=user, project=project)
+    review.value = request.data['value']
+    review.save()
+    project.getVoteCount
+    return Response(pk)
