@@ -22,8 +22,10 @@ def createProfile(sender, instance, created, *args, **kwargs):
 
 @receiver(post_delete, sender=Profile)
 def deleteUserProfile(sender, instance, *args, **kwargs):
-    instance.user.delete()
-
+    try:
+        instance.user.delete()
+    except:
+        pass
 @receiver(post_save, sender=Profile)
 def updateUserProfile(sender, instance, created, *args, **kwargs):
     profile = instance

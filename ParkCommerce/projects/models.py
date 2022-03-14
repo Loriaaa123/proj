@@ -3,7 +3,7 @@ import uuid
 from users.models import Profile
 
 class Project(models.Model):
-    owner = models.ForeignKey(Profile, on_delete=models.SET_NULL, null=True, blank=True)
+    owner = models.ForeignKey(Profile, on_delete=models.CASCADE, null=True, blank=True)
     title = models.CharField(max_length=200)
     description = models.TextField(null=True, blank=True)
     featured_image = models.ImageField(default='default.jpg', null=True, blank=True)
